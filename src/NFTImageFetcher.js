@@ -310,40 +310,28 @@ const NFTImageFetcher = () => {
     const fetchAssets = async () => {
         if (nftContract && signerAddress) {
             try {
-                console.log(signerAddress)
                 const ids = await nftContract.tokensOfOwner(signerAddress);
                 const assetDataPromises = ids.map(async (id) => {
                     try {
-                        const tokenId = id.toNumber(); // Convert BigNumber to number
-
+                        const tokenId = id.toNumber();
                         let uri = await nftContract.tokenURI(tokenId);
-                        uri = uri.replace("ipfs://", "")
-                        uri = "https://gateway.pinata.cloud/ipfs/" + uri;
-
+                        uri = uri.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
                         const response = await fetch(uri);
-
                         if (!response.ok) {
                             throw new Error(`HTTP error! Status: ${response.status}`);
                         }
-
-                        const contentType = response.headers.get('content-type');
-                        if (!contentType || !contentType.includes('application/json')) {
-                            const errorText = await response.text();
-                            throw new Error(`Expected JSON, got: ${contentType}\nResponse: ${errorText}`);
-                        }
-
                         const metadata = await response.json();
                         const imageUri = metadata.image.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
-                        return { id: tokenId, imageUri };
+                        const price = await fetchPrice(tokenId);
+                        return { id: tokenId, imageUri, price };
                     } catch (fetchError) {
                         console.error(`Error fetching metadata for token ID ${id}: ${fetchError.message}`);
                         setError(`Error fetching metadata for token ID ${id}: ${fetchError.message}`);
-                        return null; // Return null in case of an error
+                        return null;
                     }
                 });
-
                 const assetData = await Promise.all(assetDataPromises);
-                setAssets(assetData.filter(asset => asset !== null)); // Filter out null values
+                setAssets(assetData.filter(asset => asset !== null));
                 setError('');
             } catch (contractError) {
                 console.error(`Error fetching asset URIs: ${contractError.message}`);
@@ -410,26 +398,28 @@ const NFTImageFetcher = () => {
                 {activeTab === 'myNFTs' && (
                     <div className="user-nfts">
                         {error && <p style={{ color: 'red' }}>{error}</p>}
-                        <div>
+                        <div className="nft-grid">
                             {assets.length > 0 ? (
                                 assets.map((asset) => (
-                                    <div key={asset.id}>
-                                        <h2>Token ID: {asset.id}</h2>
-                                        <img src={asset.imageUri} alt={`NFT ${asset.id}`} />
-
-                                        {!listedIds.includes(asset.id) && (
-                                            <>
-                                                <input
-                                                    type="number"
-                                                    value={price[asset.id] || ''}
-                                                    onChange={(e) => setPrice((prev) => ({ ...prev, [asset.id]: e.target.value }))}
-                                                    placeholder="Enter Price in Ether"
-                                                />
-                                                <button onClick={() => listNFT(asset.id, price[asset.id])} className="mint-button">
-                                                    LIST
-                                                </button>
-                                            </>
-                                        )}
+                                    <div key={asset.id} className="nft-card">
+                                        <img src={asset.imageUri} alt={`NFT ${asset.id}`} className="nft-image" />
+                                        <div className="nft-details">
+                                            <h3>Token ID: {asset.id}</h3>
+                                            <p>Price: {asset.price ? `${asset.price} ETH` : 'Not listed'}</p>
+                                            {!listedIds.includes(asset.id) && (
+                                                <>
+                                                    <input
+                                                        type="number"
+                                                        value={price[asset.id] || ''}
+                                                        onChange={(e) => setPrice((prev) => ({ ...prev, [asset.id]: e.target.value }))}
+                                                        placeholder="Enter Price in Ether"
+                                                    />
+                                                    <button onClick={() => listNFT(asset.id, price[asset.id])} className="list-button">
+                                                        LIST
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -443,14 +433,16 @@ const NFTImageFetcher = () => {
                 {activeTab === 'listedNFTs' && (
                     <div className="minted-nfts">
                         {error && <p style={{ color: 'red' }}>{error}</p>}
-                        <div>
+                        <div className="nft-grid">
                             {nfts.length > 0 ? (
                                 nfts.map((nft) => (
-                                    <div key={nft.id}>
-                                        <h2>Token ID: {nft.id}</h2>
-                                        <img src={nft.imageUri} alt={`NFT ${nft.id}`} />
-                                        <h2>Price: {nft.price ? `${nft.price} ETH` : 'Loading...'}</h2>
-                                        <button onClick={() => buyToken(nft.id, nft.price)} className="mint-button">BUY</button>
+                                    <div key={nft.id} className="nft-card">
+                                        <img src={nft.imageUri} alt={`NFT ${nft.id}`} className="nft-image" />
+                                        <div className="nft-details">
+                                            <h3>Token ID: {nft.id}</h3>
+                                            <p>Price: {nft.price ? `${nft.price} ETH` : 'Loading...'}</p>
+                                            <button onClick={() => buyToken(nft.id, nft.price)} className="buy-button">BUY</button>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -459,6 +451,7 @@ const NFTImageFetcher = () => {
                         </div>
                     </div>
                 )}
+
             </div>
         </div>
         </>
