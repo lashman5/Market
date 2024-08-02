@@ -406,7 +406,7 @@ const NFTImageFetcher = () => {
                                         <div className="nft-details">
                                             <h3>Token ID: {asset.id}</h3>
                                             <p>Price: {asset.price ? `${asset.price} ETH` : 'Not listed'}</p>
-                                            {!listedIds.includes(asset.id) && (
+                                            {!listedIds.includes(asset.id) ? (
                                                 <>
                                                     <input
                                                         type="number"
@@ -418,6 +418,8 @@ const NFTImageFetcher = () => {
                                                         LIST
                                                     </button>
                                                 </>
+                                            ) : (
+                                                <h4>NFT Listed</h4>
                                             )}
                                         </div>
                                     </div>

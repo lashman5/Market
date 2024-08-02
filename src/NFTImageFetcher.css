@@ -14,7 +14,6 @@ body {
     background-color: #ffffff;
     color: #333;
     padding: 20px;
-    margin-top: 20px;
     min-height: 100vh;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
@@ -133,7 +132,6 @@ body {
     transition: background-color 0.3s ease; /* Smooth transition */
 }
 
-
 .mint-button:hover {
     background-color: #2980b9; /* Hover color */
 }
@@ -206,7 +204,8 @@ body {
 .minted-nfts {
     display: flex; /* Use flexbox for layout */
     flex-wrap: wrap; /* Allow wrapping for responsive design */
-    justify-content: 5px; /* Space items evenly */
+    gap: 20px;
+    justify-content: center; /* Center items evenly */
 }
 
 .nft-grid {
