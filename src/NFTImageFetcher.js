@@ -17,6 +17,7 @@ const NFTImageFetcher = () => {
     const [nfts, setNfts] = useState([]);
     const [assets, setAssets] = useState([]);
     const [error, setError] = useState('');
+    const [listedIds, setListedIds] = useState([]);
 
     const toggleTab = (tab) => {
         setActiveTab(tab);
@@ -225,12 +226,11 @@ const NFTImageFetcher = () => {
         }
     };
 
-    let listedIds = [];
-
     const fetchTokenURIs = async () => {
         if (nftContract && marketPlaceContract) {
             try {
                 const ids = await marketPlaceContract.getListedTokenIds();
+                let list = [];
                 const nftDataPromises = ids.map(async (id) => {
                     try {
                         const tokenId = id.toNumber(); // Convert BigNumber to number
@@ -254,8 +254,7 @@ const NFTImageFetcher = () => {
                         const imageUri = metadata.image.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
                         const price = await fetchPrice(tokenId);
 
-                        listedIds.push(tokenId);
-
+                        list.push(tokenId);
                         return { id: tokenId, imageUri, price };
                     } catch (fetchError) {
                         console.error(`Error fetching metadata for token ID ${id}: ${fetchError.message}`);
@@ -264,11 +263,11 @@ const NFTImageFetcher = () => {
                     }
                 });
 
-                console.log(parseInt(ids[0]._hex.slice(2), 16));
-                console.log(listedIds);
-
                 const nftData = await Promise.all(nftDataPromises);
                 setNfts(nftData.filter(nft => nft !== null)); // Filter out null values
+
+                setListedIds(list);
+
                 setError('');
             } catch (contractError) {
                 console.error(`Error fetching token URIs: ${contractError.message}`);
@@ -417,7 +416,8 @@ const NFTImageFetcher = () => {
                                     <div key={asset.id}>
                                         <h2>Token ID: {asset.id}</h2>
                                         <img src={asset.imageUri} alt={`NFT ${asset.id}`} />
-                                        {!listedIds.includes(asset.id) ? (
+
+                                        {!listedIds.includes(asset.id) && (
                                             <>
                                                 <input
                                                     type="number"
@@ -429,7 +429,7 @@ const NFTImageFetcher = () => {
                                                     LIST
                                                 </button>
                                             </>
-                                        ):<></>}
+                                        )}
                                     </div>
                                 ))
                             ) : (
