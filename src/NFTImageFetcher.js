@@ -208,7 +208,7 @@ const NFTImageFetcher = () => {
                 return;
             }
              
-            const transaction1 = await nftContract.setApprovalForAll(marketPlaceContractAddress, true);
+            const transaction1 = await nftContract.approve(marketPlaceContractAddress, id);
             const receipt1 = await transaction1.wait();
 
             if(receipt1.status == 1) {
@@ -223,6 +223,26 @@ const NFTImageFetcher = () => {
         } catch (error) {
             console.error('Error listing token:', error);
             setError(`Error listing token`);
+        }
+    };
+
+    const removeListedNFT = async (id) => {
+        try {
+            
+            if (!marketPlaceContract) {
+                setError('Marketplace contract not initialized.');
+                return;
+            }
+             
+            const transaction = await marketPlaceContract.removeListing(id);
+            const receipt = await transaction.wait();
+            console.log('NFT Delisted successfully!'); // Debugging log
+
+            setError('');
+
+        } catch (error) {
+            console.error('Error Delisting token:', error);
+            setError(`Error Delisting token`);
         }
     };
 
@@ -419,7 +439,12 @@ const NFTImageFetcher = () => {
                                                     </button>
                                                 </>
                                             ) : (
-                                                <h4>NFT Listed</h4>
+                                                <>
+                                                    <h4>NFT Listed</h4>
+                                                    <button onClick={() => removeListedNFT(asset.id)} className="list-button">
+                                                            Remove Listing
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -443,7 +468,11 @@ const NFTImageFetcher = () => {
                                         <div className="nft-details">
                                             <h3>Token ID: {nft.id}</h3>
                                             <p>Price: {nft.price ? `${nft.price} ETH` : 'Loading...'}</p>
-                                            <button onClick={() => buyToken(nft.id, nft.price)} className="buy-button">BUY</button>
+                                            {!assets.some(asset => asset.id === nft.id) && (
+                                                <button onClick={() => buyToken(nft.id, nft.price)} className="buy-button">
+                                                    BUY
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))
